@@ -6,10 +6,8 @@ using System.Threading.Tasks;
 
 namespace TCore.ListenAz
 {
-    class Program
+    public class listener
     {
-        static void Main(string[] args)
-        {
-        }
+
     }
 }
