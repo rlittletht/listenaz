@@ -45,9 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Form1.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Include="Form1.cs" />
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
@@ -77,6 +75,16 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\TCore.StatusBox\TCore.StatusBox.csproj">
+      <Project>{0e0148dd-5420-4f4a-b9de-313bb3ac24f7}</Project>
+      <Name>TCore.StatusBox</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TCore.ListenAz.csproj">
+      <Project>{bdacc3c5-45ed-4a69-9717-82755f5ed66d}</Project>
+      <Name>TCore.ListenAz</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

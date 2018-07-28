@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TCore.ListenAz", "TCore.Lis
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "listest", "listest\listest.csproj", "{AD0F4DDC-E0DF-4FB9-BD2F-D8A35DAB8C5E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TCore.StatusBox", "..\TCore.StatusBox\TCore.StatusBox.csproj", "{0E0148DD-5420-4F4A-B9DE-313BB3AC24F7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{AD0F4DDC-E0DF-4FB9-BD2F-D8A35DAB8C5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AD0F4DDC-E0DF-4FB9-BD2F-D8A35DAB8C5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AD0F4DDC-E0DF-4FB9-BD2F-D8A35DAB8C5E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E0148DD-5420-4F4A-B9DE-313BB3AC24F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E0148DD-5420-4F4A-B9DE-313BB3AC24F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E0148DD-5420-4F4A-B9DE-313BB3AC24F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E0148DD-5420-4F4A-B9DE-313BB3AC24F7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
