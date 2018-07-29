@@ -42,10 +42,18 @@ namespace listest
 
         private void button1_Click(object sender, EventArgs e)
         {
-            m_listener.TestSuspend();
             m_ts.TraceEvent(TraceEventType.Critical, 1234, "{0}\t{1}\t{2}", Guid.NewGuid().ToString(), "Test Event 1", DateTime.Now.ToString());
             m_ts.TraceEvent(TraceEventType.Critical, 1234, "{0}\t{1}\t{2}", Guid.NewGuid().ToString(), "Test Event 2", DateTime.Now.ToString());
             m_ts.TraceEvent(TraceEventType.Critical, 1234, "{0}\t{1}\t{2}", Guid.NewGuid().ToString(), "Test Event 3", DateTime.Now.ToString());
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            m_listener.TestSuspend();
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
             m_listener.TestResume();
         }
     }
