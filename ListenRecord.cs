@@ -141,6 +141,15 @@ namespace TCore.ListenAz
             }
         }
 
+        public static string s_sCsvHeader = "date,eventTickCount,level,applicationName,eventID,instanceID,processID,threadID,message";
+        public string ToCsv()
+        {
+            Partition part = PartitionParse(m_dttmForPartition);
+
+            string sDate = m_dttmForPartition.ToUniversalTime().ToString("yyyy-mm-dd'T'HH:MM:ss");
+            return $"{sDate},{m_dwTickCount},{EventTypeToString(m_tetEventType)},\"{m_sAppName}\",{m_nEventID},{m_nInstanceID},{m_nPid},{m_nTid},\"{m_sMessage}\"";
+        }
+
         public override string ToString()
         {
             Partition part = PartitionParse(m_dttmForPartition);
@@ -177,13 +186,17 @@ namespace TCore.ListenAz
         private Guid m_guidSession;
         private string m_sFileRoot;
         private listener.IHookListen m_ihl;
+        private string m_sLogFolder; // this is something like "widgetFinderLogs" - initialized when the listener is created (and consistent across sessions)
 
-        public Stage1(listener.IHookListen ihl)
+        public Stage1(listener.IHookListen ihl, string sLogFolder = "TestLogs")
         {
             m_pipeHot = new ProducerConsumer<ListenRecord>((string sMessage) => { ihl.WriteLine(sMessage); }, ProcessQueuedRecord);
 
             m_guidSession = Guid.NewGuid();
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), $"{m_guidSession.ToString()}");
+            m_sLogFolder = sLogFolder;
+            m_sFileRoot = Path.Combine(Path.GetTempPath(), m_sLogFolder, $"{m_guidSession.ToString()}");
+            Directory.CreateDirectory(m_sFileRoot);
+
             m_sCurrentFile = null;
             m_ihl = ihl;
 
@@ -214,10 +227,37 @@ namespace TCore.ListenAz
         private string m_sCurrentFile;
         private int m_cCurRecords;
 
+        private static readonly int s_cMaxRecords = 1000;
+
         public void ProcessQueuedRecord(IEnumerable<ListenRecord> pllr)
         {
-            foreach(ListenRecord lr in pllr)
-                m_ihl.WriteLine(lr.ToString());
+//            foreach(ListenRecord lr in pllr)
+//                m_ihl.WriteLine(lr.ToString());
+
+            if (m_cCurRecords > s_cMaxRecords)
+            {
+                // m_stage2.AddDoneRecord(m_sCurrentFile);
+                m_sCurrentFile = null;
+            }
+
+            if (m_sCurrentFile == null)
+            {
+                Guid guidFile = Guid.NewGuid();
+                m_sCurrentFile = Path.Combine(m_sFileRoot, $"{guidFile.ToString()}.csv");
+                m_cCurRecords = 0;
+            }
+
+            using (TextWriter tw = new StreamWriter(m_sCurrentFile, true))
+            {
+                if (m_cCurRecords == 0)
+                    tw.WriteLine(ListenRecord.s_sCsvHeader);
+
+                foreach (ListenRecord lr in pllr)
+                {
+                    tw.WriteLine(lr.ToCsv());
+                    m_cCurRecords++;
+                }
+            }
         }
     }
 }
