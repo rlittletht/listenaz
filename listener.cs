@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TCore.Pipeline;
 
 namespace TCore.ListenAz
 {
@@ -16,14 +17,18 @@ namespace TCore.ListenAz
 
         private StringBuilder m_sb;
         private IHookListen m_ihl;
-        private ProducerConsumer m_prodcons;
-        private Producer m_prod; // why have both? I could just have prodcons be able to provide the prod pointer
+        private ProducerConsumer<ListenRecord> m_prodcons;
+        private Producer<ListenRecord> m_prod; // why have both? I could just have prodcons be able to provide the prod pointer
 
         public listener(IHookListen ihl = null)
         {
             m_sb = new StringBuilder();
             m_ihl = ihl;
-            m_prodcons = new ProducerConsumer(ihl);
+            m_prodcons = new ProducerConsumer<ListenRecord>((string sMessage) =>
+            {
+                ihl.WriteLine(sMessage);
+            });
+
             m_prod = m_prodcons.Start();
         }
 
@@ -55,7 +60,7 @@ namespace TCore.ListenAz
 
         void InternalFlushLine()
         {
-            m_prod.RecordEvent(TraceEventType.Information, m_sb.ToString());
+            m_prod.RecordEvent(new ListenRecord(TraceEventType.Information, m_sb.ToString()));
             m_sb.Clear();
         }
 

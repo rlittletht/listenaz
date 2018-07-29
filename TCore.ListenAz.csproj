@@ -51,14 +51,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="consumer.cs" />
     <Compile Include="listener.cs" />
-    <Compile Include="producer.cs" />
-    <Compile Include="producer_consumer.cs" />
+    <Compile Include="ListenRecord.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TCore.Pipeline\TCore.Pipeline.csproj">
+      <Project>{34863620-1ee0-457b-904b-8744d495d2f5}</Project>
+      <Name>TCore.Pipeline</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
