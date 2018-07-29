@@ -48,6 +48,9 @@
             // 
             // m_reHook
             // 
+            this.m_reHook.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.m_reHook.Location = new System.Drawing.Point(12, 204);
             this.m_reHook.Name = "m_reHook";
             this.m_reHook.Size = new System.Drawing.Size(775, 236);

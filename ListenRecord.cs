@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Threading;
 using NUnit.Framework;
 using TCore.Pipeline;
@@ -173,10 +174,19 @@ namespace TCore.ListenAz
     public class Stage1
     {
         private ProducerConsumer<ListenRecord> m_pipeHot;
+        private Guid m_guidSession;
+        private string m_sFileRoot;
+        private listener.IHookListen m_ihl;
 
         public Stage1(listener.IHookListen ihl)
         {
-            m_pipeHot = new ProducerConsumer<ListenRecord>((string sMessage) => { ihl.WriteLine(sMessage); });
+            m_pipeHot = new ProducerConsumer<ListenRecord>((string sMessage) => { ihl.WriteLine(sMessage); }, ProcessQueuedRecord);
+
+            m_guidSession = Guid.NewGuid();
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), $"{m_guidSession.ToString()}");
+            m_sCurrentFile = null;
+            m_ihl = ihl;
+
             m_pipeHot.Start();
         }
 
@@ -198,7 +208,16 @@ namespace TCore.ListenAz
         public void RecordNewListenRecord(string sMessage)
         {
             m_pipeHot.Producer.QueueRecord(new ListenRecord(TraceEventType.Information, sMessage));
+        }
 
+        // THESE VALUES CANNOT BE TOUCHED OUTSIDE OF THE CONSUMER THREAD (once the thread is started)
+        private string m_sCurrentFile;
+        private int m_cCurRecords;
+
+        public void ProcessQueuedRecord(IEnumerable<ListenRecord> pllr)
+        {
+            foreach(ListenRecord lr in pllr)
+                m_ihl.WriteLine(lr.ToString());
         }
     }
 }
