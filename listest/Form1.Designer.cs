@@ -31,6 +31,7 @@
             this.m_pbTestEvent = new System.Windows.Forms.Button();
             this.m_reHook = new System.Windows.Forms.RichTextBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.button1 = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // m_pbTestEvent
@@ -60,11 +61,22 @@
             this.label1.TabIndex = 2;
             this.label1.Text = "Hooked Output";
             // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(712, 41);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.TabIndex = 3;
+            this.button1.Text = "Test 3 Events";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
             // listest
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.m_reHook);
             this.Controls.Add(this.m_pbTestEvent);
@@ -79,6 +91,7 @@
         private System.Windows.Forms.Button m_pbTestEvent;
         private System.Windows.Forms.RichTextBox m_reHook;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Button button1;
     }
 }
 
