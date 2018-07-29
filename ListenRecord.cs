@@ -147,6 +147,10 @@ namespace TCore.ListenAz
             return
                 $"{PartToString(part)}: {m_dttmForPartition.ToString()}, tick({m_dwTickCount}), {EventTypeToString(m_tetEventType)}, {m_sAppName}, eid({m_nEventID}), inst({m_nInstanceID}), pid({m_nPid}), tid({m_nTid}), {m_sMessage}";
         }
+    }
+
+    public class Stage1
+    {
 
     }
 }
