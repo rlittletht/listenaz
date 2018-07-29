@@ -7,7 +7,7 @@ using TCore.Pipeline;
 
 namespace TCore.ListenAz
 {
-    public class ListenRecord: IPipelineBase<ListenRecord>
+    public class ListenRecord : IPipelineBase<ListenRecord>
     {
         private DateTime m_dttmForPartition;
         private Int64 m_dwTickCount;
@@ -149,8 +149,56 @@ namespace TCore.ListenAz
         }
     }
 
+    // this will setup stage 1 pipeline, ready for the Listener to give us records and we will get them
+    // into persistent local storage.  we will use our session ID as a directory to store the logs into
+    // we don't want thousands of tiny files, so we will append to a file until it gets to a set size then
+    // we will start a new file.
+
+    // The Stage 1 Consumer (CONS1) will:
+    //      IF Current file >= LIMIT records, call PROD2.Queue("FileName, DONE FLAG"), DONE FLAG means everyone is HANDS OFF t.  set to No Current File
+    //      IF no current file, then Create new file in APPDATA\\SESSIONID\\GUID.CSV, // FALLTHROUGH
+    //      IF Current file < LIMIT records, append to current file, Call PROD2.Queue("FileName + SeekLimit + Number of lines added?")  (THIS MIGHT grow bigger than LIMIT since we don't want to create a new file in the middle of this)
+
+    // The stage 2 Producer (PROD2) will:
+    //      Take FileName + current tell limit, add to QUEUE
+
+    // The stage 2 Consumer (CONST2) will:
+    //      Open the file, seek to the location given in FILENAME.PROCESSED, and read each line and process them.
+    //          As we process each line, write the new "Written Limit" to FILENAME.PROCESSED
+    //          (i.e. this file will always have a single value in it, which represents the seek location that
+    //          is right after the last record processed)
+    //      If DONE FLAG is set on record, then DELETE FILENAME and DELETE FILENAME.PROCESSED
+
+
     public class Stage1
     {
+        private ProducerConsumer<ListenRecord> m_pipeHot;
 
+        public Stage1(listener.IHookListen ihl)
+        {
+            m_pipeHot = new ProducerConsumer<ListenRecord>((string sMessage) => { ihl.WriteLine(sMessage); });
+            m_pipeHot.Start();
+        }
+
+        public void Stop()
+        {
+            m_pipeHot.Stop();
+        }
+
+        public void TestSuspendConsumerThread()
+        {
+            m_pipeHot.TestSuspendConsumerThread();
+        }
+
+        public void TestResumeConsumerThread()
+        {
+            m_pipeHot.TestResumeConsumerThread();
+        }
+
+        public void RecordNewListenRecord(string sMessage)
+        {
+            m_pipeHot.Producer.QueueRecord(new ListenRecord(TraceEventType.Information, sMessage));
+
+        }
     }
 }

@@ -17,31 +17,29 @@ namespace TCore.ListenAz
 
         private StringBuilder m_sb;
         private IHookListen m_ihl;
-        private ProducerConsumer<ListenRecord> m_pipeHot;
+
+        private Stage1 m_stage1;
 
         public listener(IHookListen ihl = null)
         {
             m_sb = new StringBuilder();
             m_ihl = ihl;
-            m_pipeHot = new ProducerConsumer<ListenRecord>((string sMessage) =>
-            {
-                ihl.WriteLine(sMessage);
-            });
+            m_stage1 = new Stage1(ihl);
         }
 
         public void Terminate()
         {
-            m_pipeHot.Stop();
+            m_stage1.Stop();
         }
 
         public void TestSuspend()
         {
-            m_pipeHot.TestSuspendConsumerThread();
+            m_stage1.TestSuspendConsumerThread();
         }
 
         public void TestResume()
         {
-            m_pipeHot.TestResumeThread();
+            m_stage1.TestResumeConsumerThread();
         }
 
         void InternalWrite(string sCategory, string sMessage)
@@ -57,7 +55,7 @@ namespace TCore.ListenAz
 
         void InternalFlushLine()
         {
-            m_pipeHot.Producer.QueueRecord(new ListenRecord(TraceEventType.Information, m_sb.ToString()));
+            m_stage1.RecordNewListenRecord(m_sb.ToString());
             m_sb.Clear();
         }
 
