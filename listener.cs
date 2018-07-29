@@ -17,34 +17,31 @@ namespace TCore.ListenAz
 
         private StringBuilder m_sb;
         private IHookListen m_ihl;
-        private ProducerConsumer<ListenRecord> m_prodcons;
-        private Producer<ListenRecord> m_prod; // why have both? I could just have prodcons be able to provide the prod pointer
+        private ProducerConsumer<ListenRecord> m_pipeHot;
 
         public listener(IHookListen ihl = null)
         {
             m_sb = new StringBuilder();
             m_ihl = ihl;
-            m_prodcons = new ProducerConsumer<ListenRecord>((string sMessage) =>
+            m_pipeHot = new ProducerConsumer<ListenRecord>((string sMessage) =>
             {
                 ihl.WriteLine(sMessage);
             });
-
-            m_prod = m_prodcons.Start();
         }
 
         public void Terminate()
         {
-            m_prodcons.Stop();
+            m_pipeHot.Stop();
         }
 
         public void TestSuspend()
         {
-            m_prodcons.TestSuspendConsumerThread();
+            m_pipeHot.TestSuspendConsumerThread();
         }
 
         public void TestResume()
         {
-            m_prodcons.TestResumeThread();
+            m_pipeHot.TestResumeThread();
         }
 
         void InternalWrite(string sCategory, string sMessage)
@@ -60,7 +57,7 @@ namespace TCore.ListenAz
 
         void InternalFlushLine()
         {
-            m_prod.RecordEvent(new ListenRecord(TraceEventType.Information, m_sb.ToString()));
+            m_pipeHot.Producer.QueueRecord(new ListenRecord(TraceEventType.Information, m_sb.ToString()));
             m_sb.Clear();
         }
 
