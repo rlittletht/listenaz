@@ -37,6 +37,10 @@ namespace TCore.ListenAz
             m_stage1.TestSuspendConsumerThread();
         }
 
+        public void SetDebugDateOffset(int n)
+        {
+            m_stage1.SetTestOffsetMinutesDateTime(n);
+        }
         public void TestResume()
         {
             m_stage1.TestResumeConsumerThread();

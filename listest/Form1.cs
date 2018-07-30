@@ -79,6 +79,16 @@ namespace listest
 
             m_sb.AddMessage($"{sAction}: Elapsed {timer.ElapsedMsec()}");
         }
+
+        private void OnDebugOffsetChanged(object sender, EventArgs e)
+        {
+            TextBox tb = (TextBox) sender;
+
+            if (String.IsNullOrEmpty(tb.Text))
+                m_listener.SetDebugDateOffset(0);
+            else
+                m_listener.SetDebugDateOffset(Int32.Parse(tb.Text));
+        }
     }
 
     // ============================================================================
