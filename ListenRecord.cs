@@ -9,6 +9,9 @@ using TCore.Pipeline;
 
 namespace TCore.ListenAz
 {
+    // ============================================================================
+    // L I S T E N  R E C O R D
+    // ============================================================================
     public class ListenRecord : IPipelineBase<ListenRecord>
     {
         private Partition m_part;
@@ -27,6 +30,14 @@ namespace TCore.ListenAz
 
         }
 
+        #region Constructors / Initialization
+
+        /*----------------------------------------------------------------------------
+        	%%Function: IPipelineBase<ListenRecord>.InitFrom
+        	%%Qualified: TCore.ListenAz.ListenRecord.TCore.Pipeline.IPipelineBase<TCore.ListenAz.ListenRecord>.InitFrom
+        	%%Contact: rlittle
+        	
+        ----------------------------------------------------------------------------*/
         void IPipelineBase<ListenRecord>.InitFrom(ListenRecord lr)
         {
             m_dttm = lr.m_dttm;
@@ -41,6 +52,12 @@ namespace TCore.ListenAz
             m_sMessage = lr.m_sMessage;
         }
 
+        /*----------------------------------------------------------------------------
+        	%%Function: ListenRecord
+        	%%Qualified: TCore.ListenAz.ListenRecord.ListenRecord
+        	%%Contact: rlittle
+        	
+        ----------------------------------------------------------------------------*/
         public ListenRecord(TraceEventType tet, string sMessage, int nDebugMinutesOffset = 0)
         {
             Process proc = Process.GetCurrentProcess();
@@ -60,6 +77,12 @@ namespace TCore.ListenAz
             m_dwTickCount = System.Environment.TickCount;
         }
 
+        /*----------------------------------------------------------------------------
+        	%%Function: ListenRecord
+        	%%Qualified: TCore.ListenAz.ListenRecord.ListenRecord
+        	%%Contact: rlittle
+        	
+        ----------------------------------------------------------------------------*/
         public ListenRecord(DateTime dttm, TraceEventType tet, string sMessage)
         {
             Process proc = Process.GetCurrentProcess();
@@ -76,6 +99,12 @@ namespace TCore.ListenAz
             m_dwTickCount = System.Environment.TickCount;
         }
 
+        /*----------------------------------------------------------------------------
+        	%%Function: ListenRecord
+        	%%Qualified: TCore.ListenAz.ListenRecord.ListenRecord
+        	%%Contact: rlittle
+        	
+        ----------------------------------------------------------------------------*/
         public ListenRecord(ListenRecord lr)
         {
             m_dttm = lr.m_dttm;
@@ -90,8 +119,13 @@ namespace TCore.ListenAz
             m_sMessage = lr.m_sMessage;
         }
 
+        #endregion
+
         public Partition Part => m_part;
 
+        // ============================================================================
+        // P A R T I T I O N
+        // ============================================================================
         public struct Partition
         {
             public string Year;
@@ -136,6 +170,12 @@ namespace TCore.ListenAz
             }
         }
 
+        /*----------------------------------------------------------------------------
+        	%%Function: PartitionParse
+        	%%Qualified: TCore.ListenAz.ListenRecord.PartitionParse
+        	%%Contact: rlittle
+        	
+        ----------------------------------------------------------------------------*/
         static Partition PartitionParse(DateTime dttm)
         {
             Partition part;
@@ -185,6 +225,13 @@ namespace TCore.ListenAz
             Partition partRight = Partition.Zero;
             Assert.AreEqual(partLeft, partRight);
         }
+
+        /*----------------------------------------------------------------------------
+        	%%Function: EventTypeToString
+        	%%Qualified: TCore.ListenAz.ListenRecord.EventTypeToString
+        	%%Contact: rlittle
+        	
+        ----------------------------------------------------------------------------*/
         static string EventTypeToString(TraceEventType tet)
         {
             switch (tet)
@@ -204,13 +251,16 @@ namespace TCore.ListenAz
             }
         }
 
-        public static string s_sCsvHeader = "date,eventTickCount,level,applicationName,eventID,instanceID,processID,threadID,message";
+        public static string s_sCsvHeader =
+            "date,eventTickCount,level,applicationName,eventID,instanceID,processID,threadID,message";
+
         public string ToCsv()
         {
             Partition part = PartitionParse(m_dttm);
 
             string sDate = m_dttm.ToUniversalTime().ToString("yyyy-mm-dd'T'HH:MM:ss");
-            return $"{sDate},{m_dwTickCount},{EventTypeToString(m_tetEventType)},\"{m_sAppName}\",{m_nEventID},{m_nInstanceID},{m_nPid},{m_nTid},\"{m_sMessage}\"";
+            return
+                $"{sDate},{m_dwTickCount},{EventTypeToString(m_tetEventType)},\"{m_sAppName}\",{m_nEventID},{m_nInstanceID},{m_nPid},{m_nTid},\"{m_sMessage}\"";
         }
 
         public override string ToString()
@@ -250,12 +300,17 @@ namespace TCore.ListenAz
         private Guid m_guidSession;
         private string m_sFileRoot;
         private listener.IHookListen m_ihl;
-        private string m_sLogFolder; // this is something like "widgetFinderLogs" - initialized when the listener is created (and consistent across sessions)
-        private int m_nTestOffsetMinutesDateTime;  // this allows a test harness to mess with the datetime stamp. this value will be added to the datetime.now() when we create the listenrecord (the value is treated as minutes)
+
+        private string
+            m_sLogFolder; // this is something like "widgetFinderLogs" - initialized when the listener is created (and consistent across sessions)
+
+        private int
+            m_nTestOffsetMinutesDateTime; // this allows a test harness to mess with the datetime stamp. this value will be added to the datetime.now() when we create the listenrecord (the value is treated as minutes)
 
         public Stage1(listener.IHookListen ihl, string sLogFolder = "TestLogs")
         {
-            m_pipeHot = new ProducerConsumer<ListenRecord>((string sMessage) => { ihl.WriteLine(sMessage); }, ProcessQueuedRecord);
+            m_pipeHot = new ProducerConsumer<ListenRecord>((string sMessage) => { ihl.WriteLine(sMessage); },
+                ProcessQueuedRecord);
 
             m_guidSession = Guid.NewGuid();
             m_sLogFolder = sLogFolder;
@@ -301,6 +356,7 @@ namespace TCore.ListenAz
             {
                 lr = new ListenRecord(TraceEventType.Information, sMessage);
             }
+
             m_pipeHot.Producer.QueueRecord(lr);
         }
 
