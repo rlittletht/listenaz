@@ -19,17 +19,37 @@ namespace TCore.ListenAz
         private IHookListen m_ihl;
 
         private Stage1 m_stage1;
+        private Stage2 m_stage2;
+
+        class StageListener : IHookListen
+        {
+            private IHookListen m_ihlBase;
+            private string m_sStageName;
+
+            public StageListener(IHookListen ihlBase, string sStageName)
+            {
+                m_ihlBase = ihlBase;
+                m_sStageName = sStageName;
+            }
+
+            public void WriteLine(string sText)
+            {
+                m_ihlBase.WriteLine($"{m_sStageName}: {sText}");
+            }
+        }
 
         public listener(IHookListen ihl = null)
         {
             m_sb = new StringBuilder();
             m_ihl = ihl;
-            m_stage1 = new Stage1(ihl);
+            m_stage2 = new Stage2(new StageListener(ihl, "Stage2"));
+            m_stage1 = new Stage1(new StageListener(ihl, "Stage1"), m_stage2);
         }
 
         public void Terminate()
         {
             m_stage1.Stop();
+            m_stage2.Stop();
         }
 
         public void TestSuspend()

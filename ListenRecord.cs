@@ -190,7 +190,7 @@ namespace TCore.ListenAz
             return part;
         }
 
-        static string PartToString(Partition part)
+        public static string PartToString(Partition part)
         {
             return $"{part.Year}/{part.Month}/{part.Day}/{part.Hour}";
         }
@@ -300,6 +300,7 @@ namespace TCore.ListenAz
         private Guid m_guidSession;
         private string m_sFileRoot;
         private listener.IHookListen m_ihl;
+        private Stage2 m_stage2;
 
         private string
             m_sLogFolder; // this is something like "widgetFinderLogs" - initialized when the listener is created (and consistent across sessions)
@@ -307,8 +308,9 @@ namespace TCore.ListenAz
         private int
             m_nTestOffsetMinutesDateTime; // this allows a test harness to mess with the datetime stamp. this value will be added to the datetime.now() when we create the listenrecord (the value is treated as minutes)
 
-        public Stage1(listener.IHookListen ihl, string sLogFolder = "TestLogs")
+        public Stage1(listener.IHookListen ihl, Stage2 stage2, string sLogFolder = "TestLogs")
         {
+            m_stage2 = stage2;
             m_pipeHot = new ProducerConsumer<ListenRecord>((string sMessage) => { ihl.WriteLine(sMessage); },
                 ProcessQueuedRecord);
 
@@ -364,8 +366,80 @@ namespace TCore.ListenAz
         private string m_sCurrentFile;
         private int m_cCurRecords;
         private ListenRecord.Partition m_partCurrent;
+        private long m_ibOffsetLim;
 
         private static readonly int s_cMaxRecords = 1000;
+
+        public class ListenRecordFile
+        {
+            private StreamWriter m_sw;
+            private string m_sCurrentFile;
+            private int m_cCurRecords;
+            private int m_cCurRecordsStart;
+            private ListenRecord.Partition m_partCurrent;
+            private long m_ibOffsetLim;
+
+            public string Filename => m_sCurrentFile;
+            public int RecordsExpecting => m_cCurRecords - m_cCurRecordsStart;
+            public ListenRecord.Partition Part => m_partCurrent;
+            public long FileOffsetLim => m_ibOffsetLim;
+
+            public ListenRecordFile(string sFileRoot, ListenRecord.Partition part)
+            {
+                Guid guidFile = Guid.NewGuid();
+                m_sCurrentFile = Path.Combine(sFileRoot, $"{guidFile.ToString()}.csv");
+                m_cCurRecords = 0;
+                m_cCurRecordsStart = 0;
+                m_ibOffsetLim = 0;
+                m_partCurrent = part;
+            }
+
+            public long Flush()
+            {
+                if (m_sw == null)
+                    return -1;
+
+                m_sw.Flush();
+                m_ibOffsetLim = m_sw.BaseStream.Position;
+                return m_ibOffsetLim;
+            }
+
+            public long FlushAndClose()
+            {
+                if (m_sw == null)
+                    return -1;
+
+                m_sw.Flush();
+                m_ibOffsetLim = m_sw.BaseStream.Position;
+                m_sw.Close();
+                m_sw.Dispose();
+                m_sw = null;
+
+                return m_ibOffsetLim;
+            }
+
+            public bool FCanAppendPartitionRecord(ListenRecord.Partition part)
+            {
+                if (m_cCurRecords > s_cMaxRecords || m_partCurrent != part)
+                    return false;
+
+                return true;
+            }
+
+            public void WriteListenRecord(ListenRecord lr)
+            {
+                if (m_sw == null)
+                    m_sw = new StreamWriter(m_sCurrentFile, true);
+
+                if (m_cCurRecords == 0)
+                    m_sw.WriteLine(ListenRecord.s_sCsvHeader);
+
+                m_sw.WriteLine(lr.ToCsv());
+                m_cCurRecords++;
+            }
+        }
+
+        private ListenRecordFile m_lrfCurrent;
 
         public void ProcessQueuedRecord(IEnumerable<ListenRecord> pllr)
         {
@@ -377,43 +451,43 @@ namespace TCore.ListenAz
                 return;
 
             ListenRecord lr = enumerator.Current;
+            int cCurRecordsStart = m_cCurRecords;
+
             if (lr == null)
                 return;
 
             while (lr != null)
             {
-                if (m_cCurRecords > s_cMaxRecords || m_partCurrent != lr.Part)
+                if (m_lrfCurrent != null && !m_lrfCurrent.FCanAppendPartitionRecord(lr.Part))
                 {
                     // SEND NOTIFICATION HERE:
-                    //    m_stage2.Producer2.Post(m_sCurrentFile, s_cMaxRecords, m_partCurrent, DoneRecord==TRUE)
-                    m_sCurrentFile = null;
+                    m_lrfCurrent.FlushAndClose();
+                    m_stage2.RecordNewListenSync(m_lrfCurrent, true);
+                    m_lrfCurrent = null;
                 }
 
-                if (m_sCurrentFile == null)
+                if (m_lrfCurrent == null)
                 {
-                    Guid guidFile = Guid.NewGuid();
-                    m_sCurrentFile = Path.Combine(m_sFileRoot, $"{guidFile.ToString()}.csv");
-                    m_cCurRecords = 0;
-                    m_partCurrent = lr.Part;
+                    m_lrfCurrent = new ListenRecordFile(m_sFileRoot, lr.Part);
                 }
 
-                using (TextWriter tw = new StreamWriter(m_sCurrentFile, true))
+
+                while (lr != null && m_lrfCurrent.FCanAppendPartitionRecord(lr.Part))
                 {
-                    while (lr != null && m_partCurrent == lr.Part)
-                    {
-                        if (m_cCurRecords == 0)
-                            tw.WriteLine(ListenRecord.s_sCsvHeader);
+                    m_lrfCurrent.WriteListenRecord(lr);
 
-                        tw.WriteLine(lr.ToCsv());
-                        m_cCurRecords++;
-                        if (!enumerator.MoveNext())
-                            lr = null;
-
+                    if (!enumerator.MoveNext())
+                        lr = null;
+                    else
                         lr = enumerator.Current;
-                    }
                 }
+
+                m_lrfCurrent.Flush(); // FUTURE: Get rid of flush :(
             }
+
             // LASTLY, send a notification for the current file and the current record
+            m_lrfCurrent.FlushAndClose();
+            m_stage2.RecordNewListenSync(m_lrfCurrent, false);
 
             // if m_sCurrentFile != null, m_stage2.Producer2.Post(m_sCurrentFile, s_cMaxRecords, m_partCurrent, DONE==FALSE
         }
