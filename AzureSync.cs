@@ -270,7 +270,7 @@ namespace TCore.ListenAz
                 private int m_ibBufferStart = -1;
                 private int m_ibBufferLim = -1;
                 private readonly long m_ibFileLim;
-                private readonly FileStream m_fs;
+                private readonly Stream m_stm;
 
                 public int Start => m_ibBufferStart;
                 public int Lim => m_ibBufferLim;
@@ -283,9 +283,9 @@ namespace TCore.ListenAz
                 	
                     create a new buffer on top of the given filestream
                 ----------------------------------------------------------------------------*/
-                public Buffer(FileStream fs, long ibFileLim)
+                public Buffer(FileStream stm, long ibFileLim)
                 {
-                    m_fs = fs;
+                    m_stm = stm;
                     m_ibFileLim = ibFileLim;
                 }
 
@@ -300,15 +300,15 @@ namespace TCore.ListenAz
                 ----------------------------------------------------------------------------*/
                 public bool FillBuffer(int ibStart)
                 {
-                    if (m_fs.Position >= m_ibFileLim)
+                    if (m_stm.Position >= m_ibFileLim)
                         return false;
 
-                    long cbToRead = Math.Min(1024 - ibStart, m_ibFileLim - m_fs.Position);
+                    long cbToRead = Math.Min(1024 - ibStart, m_ibFileLim - m_stm.Position);
 
                     if (cbToRead != (int)cbToRead)
                         throw new Exception("read overflow");
 
-                    int cbRead = m_fs.Read(m_rgb, ibStart, (int)cbToRead);
+                    int cbRead = m_stm.Read(m_rgb, ibStart, (int)cbToRead);
 
                     if (cbRead != cbToRead)
                         throw new Exception("read failure");
