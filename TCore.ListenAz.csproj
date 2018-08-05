@@ -51,6 +51,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AzureSync.cs" />
     <Compile Include="listener.cs" />
     <Compile Include="ListenRecord.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

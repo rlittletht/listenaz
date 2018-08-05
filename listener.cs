@@ -17,34 +17,53 @@ namespace TCore.ListenAz
 
         private StringBuilder m_sb;
         private IHookListen m_ihl;
-        private ProducerConsumer<ListenRecord> m_prodcons;
-        private Producer<ListenRecord> m_prod; // why have both? I could just have prodcons be able to provide the prod pointer
+
+        private Stage1 m_stage1;
+        private Stage2 m_stage2;
+
+        class StageListener : IHookListen
+        {
+            private IHookListen m_ihlBase;
+            private string m_sStageName;
+
+            public StageListener(IHookListen ihlBase, string sStageName)
+            {
+                m_ihlBase = ihlBase;
+                m_sStageName = sStageName;
+            }
+
+            public void WriteLine(string sText)
+            {
+                m_ihlBase.WriteLine($"{m_sStageName}: {sText}");
+            }
+        }
 
         public listener(IHookListen ihl = null)
         {
             m_sb = new StringBuilder();
             m_ihl = ihl;
-            m_prodcons = new ProducerConsumer<ListenRecord>((string sMessage) =>
-            {
-                ihl.WriteLine(sMessage);
-            });
-
-            m_prod = m_prodcons.Start();
+            m_stage2 = new Stage2(new StageListener(ihl, "Stage2"));
+            m_stage1 = new Stage1(new StageListener(ihl, "Stage1"), m_stage2);
         }
 
         public void Terminate()
         {
-            m_prodcons.Stop();
+            m_stage1.Stop();
+            m_stage2.Stop();
         }
 
         public void TestSuspend()
         {
-            m_prodcons.TestSuspendConsumerThread();
+            m_stage1.TestSuspendConsumerThread();
         }
 
+        public void SetDebugDateOffset(int n)
+        {
+            m_stage1.SetTestOffsetMinutesDateTime(n);
+        }
         public void TestResume()
         {
-            m_prodcons.TestResumeThread();
+            m_stage1.TestResumeConsumerThread();
         }
 
         void InternalWrite(string sCategory, string sMessage)
@@ -60,7 +79,7 @@ namespace TCore.ListenAz
 
         void InternalFlushLine()
         {
-            m_prod.RecordEvent(new ListenRecord(TraceEventType.Information, m_sb.ToString()));
+            m_stage1.RecordNewListenRecord(m_sb.ToString());
             m_sb.Clear();
         }
 
