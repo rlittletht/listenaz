@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TCore.Pipeline", "..\TCore.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TCore.CSV", "..\TCore.CSV\TCore.CSV.csproj", "{E2D2EF30-C48E-4517-93FD-590940E23CE3}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Liblets", "Liblets", "{A387E400-2409-4AFF-AA04-1815210CA9E9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,6 +44,11 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{0E0148DD-5420-4F4A-B9DE-313BB3AC24F7} = {A387E400-2409-4AFF-AA04-1815210CA9E9}
+		{34863620-1EE0-457B-904B-8744D495D2F5} = {A387E400-2409-4AFF-AA04-1815210CA9E9}
+		{E2D2EF30-C48E-4517-93FD-590940E23CE3} = {A387E400-2409-4AFF-AA04-1815210CA9E9}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EAA31B1E-D6F7-4444-B855-3AB849F8C95A}
