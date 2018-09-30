@@ -66,6 +66,10 @@
       <Project>{34863620-1ee0-457b-904b-8744d495d2f5}</Project>
       <Name>TCore.Pipeline</Name>
     </ProjectReference>
+    <ProjectReference Include="..\TCore.StreamEx\TCore.StreamEx.csproj">
+      <Project>{a6c31d9e-ca95-4baa-9b42-7f080df59067}</Project>
+      <Name>TCore.StreamEx</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

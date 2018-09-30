@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using TCore.StreamEx;
 
 namespace TCore.ListenAz
 {
@@ -9,13 +10,13 @@ namespace TCore.ListenAz
         private FileStream m_fs;
         private long m_ibStart;
         private long m_ibLim;
-        private Buffer m_bufferMain;
-        private Buffer m_bufferSwap;
+        private SwapBuffer m_bufferMain;
+        private SwapBuffer m_bufferSwap;
 
         private bool m_fUseSwapBuffer = false;
 
-        private Buffer BufferCurrent => m_fUseSwapBuffer ? m_bufferSwap : m_bufferMain;
-        private Buffer BufferOther => !m_fUseSwapBuffer ? m_bufferSwap : m_bufferMain;
+        private SwapBuffer BufferCurrent => m_fUseSwapBuffer ? m_bufferSwap : m_bufferMain;
+        private SwapBuffer BufferOther => !m_fUseSwapBuffer ? m_bufferSwap : m_bufferMain;
 
         /*----------------------------------------------------------------------------
             %%Function: ListenSyncFile
@@ -35,88 +36,38 @@ namespace TCore.ListenAz
             m_ibStart = ibStart;
             m_ibLim = ibLim;
             m_fs.Seek(m_ibStart, SeekOrigin.Begin);
-            m_bufferMain = new Buffer(m_fs, ibLim);
-            m_bufferSwap = new Buffer(m_fs, ibLim);
-        }
-
-        // ============================================================================
-        // B U F F E R
-        //
-        // Allows buffering on top of a FileStream
-        // ============================================================================
-        class Buffer
-        {
-            private byte[] m_rgb = new byte[1024];
-            private int m_ibBufferStart = -1;
-            private int m_ibBufferLim = -1;
-            private readonly long m_ibFileLim;
-            private readonly Stream m_stm;
-
-            public int Start => m_ibBufferStart;
-            public int Lim => m_ibBufferLim;
-            public byte[] Bytes => m_rgb;
-
-            /*----------------------------------------------------------------------------
-                %%Function: Buffer
-                %%Qualified: TCore.ListenAz.Stage2.ListenSyncFile.Buffer.Buffer
-                %%Contact: rlittle
-                
-                create a new buffer on top of the given filestream
-            ----------------------------------------------------------------------------*/
-            public Buffer(FileStream stm, long ibFileLim)
-            {
-                m_stm = stm;
-                m_ibFileLim = ibFileLim;
-            }
-
-            /*----------------------------------------------------------------------------
-                %%Function: FillBuffer
-                %%Qualified: TCore.ListenAz.Stage2.ListenSyncFile.Buffer.FillBuffer
-                %%Contact: rlittle
-                
-                ibStart is where we should start filling the buffer at (presumable
-                everything before ibStart should be untouched by us because its been
-                prefilled)
-            ----------------------------------------------------------------------------*/
-            public bool FillBuffer(int ibStart)
-            {
-                if (m_stm.Position >= m_ibFileLim)
-                    return false;
-
-                long cbToRead = Math.Min(1024 - ibStart, m_ibFileLim - m_stm.Position);
-
-                if (cbToRead != (int) cbToRead)
-                    throw new Exception("read overflow");
-
-                int cbRead = m_stm.Read(m_rgb, ibStart, (int) cbToRead);
-
-                if (cbRead != cbToRead)
-                    throw new Exception("read failure");
-
-                m_ibBufferStart = ibStart;
-                m_ibBufferLim = ibStart + cbRead;
-
-                return true;
-            }
-
-            /*----------------------------------------------------------------------------
-                %%Function: SetPos
-                %%Qualified: TCore.ListenAz.Stage2.ListenSyncFile.Buffer.SetPos
-                %%Contact: rlittle
-                
-                set the seek position
-            ----------------------------------------------------------------------------*/
-            public void SetPos(int ib)
-            {
-                m_ibBufferStart = ib;
-            }
+            m_bufferMain = new SwapBuffer(m_fs, ibLim);
+            m_bufferSwap = new SwapBuffer(m_fs, ibLim);
         }
 
         /*----------------------------------------------------------------------------
-            %%Function: SwapBuffer
-            %%Qualified: TCore.ListenAz.Stage2.ListenSyncFile.SwapBuffer
+            %%Function: Position
+            %%Qualified: TCore.ListenAz.Stage2.ListenSyncFile.Position
             %%Contact: rlittle
             
+        ----------------------------------------------------------------------------*/
+        public long Position()
+        {
+            return m_fs.Position;
+        }
+
+        /*----------------------------------------------------------------------------
+            %%Function: Close
+            %%Qualified: TCore.ListenAz.Stage2.ListenSyncFile.Close
+            %%Contact: rlittle
+            
+        ----------------------------------------------------------------------------*/
+        public void Close()
+        {
+            m_fs.Close();
+            m_fs.Dispose();
+            m_fs = null;
+        }
+        /*----------------------------------------------------------------------------
+            %%Function: SwapBuffer
+            %%Qualified: TCore.ListenAz.Stage2.BufferedStream.SwapBuffer
+            %%Contact: rlittle
+
             swap the current buffer with the other buffer (and fill the new buffer)
             make sure we copy from ibPreserve to the end of the buffer to ensure we 
             have a contiguous token
@@ -146,10 +97,10 @@ namespace TCore.ListenAz
 
         /*----------------------------------------------------------------------------
             %%Function: ReadLine
-            %%Qualified: TCore.ListenAz.Stage2.ListenSyncFile.ReadLine
+            %%Qualified: TCore.ListenAz.Stage2.BufferedStream.ReadLine
             %%Contact: rlittle
-            
-            read a line from the ListenSyncFile. return the string, or null
+
+            read a line from the BufferedStream. return the string, or null
             if we are out of lines to read.  we will always return a line at
             the end of the buffer, even if its not terminated with a line ending
         ----------------------------------------------------------------------------*/
@@ -227,28 +178,5 @@ namespace TCore.ListenAz
             }
         }
 
-        /*----------------------------------------------------------------------------
-            %%Function: Position
-            %%Qualified: TCore.ListenAz.Stage2.ListenSyncFile.Position
-            %%Contact: rlittle
-            
-        ----------------------------------------------------------------------------*/
-        public long Position()
-        {
-            return m_fs.Position;
-        }
-
-        /*----------------------------------------------------------------------------
-            %%Function: Close
-            %%Qualified: TCore.ListenAz.Stage2.ListenSyncFile.Close
-            %%Contact: rlittle
-            
-        ----------------------------------------------------------------------------*/
-        public void Close()
-        {
-            m_fs.Close();
-            m_fs.Dispose();
-            m_fs = null;
-        }
     }
 }
