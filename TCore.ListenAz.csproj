@@ -55,7 +55,6 @@
     <Compile Include="DebugStream.cs" />
     <Compile Include="listener.cs" />
     <Compile Include="ListenRecord.cs" />
-    <Compile Include="ListenSyncFile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

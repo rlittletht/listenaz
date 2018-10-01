@@ -14,6 +14,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using TCore.Pipeline;
+using TCore.StreamEx;
 
 namespace TCore.ListenAz
 {
@@ -258,17 +259,17 @@ namespace TCore.ListenAz
                 m_ihl.WriteLine(
                     $"Dumping records for {Regex.Escape(lr.Filename)}, starting at {ibStart}. Partition: {ListenRecord.PartToString(lr.Part)}");
 
-                ListenSyncFile lsf = new ListenSyncFile(lr.Filename, ibStart, lr.FileOffsetLim);
+                BufferedStreamEx bstm = new BufferedStreamEx(lr.Filename, ibStart, lr.FileOffsetLim);
 
                 string sLine;
 
-                while ((sLine = lsf.ReadLine()) != null)
+                while ((sLine = bstm.ReadLine()) != null)
                 {
                     m_ihl.WriteLine($"Flush: {sLine}");
                 }
 
-                RecordIbOffsetStartForFile(lr.Filename, lsf.Position());
-                lsf.Close();
+                RecordIbOffsetStartForFile(lr.Filename, bstm.Position());
+                bstm.Close();
 
                 if (enumerator.MoveNext())
                     lr = enumerator.Current;
