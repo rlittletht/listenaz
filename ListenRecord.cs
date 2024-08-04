@@ -603,7 +603,7 @@ namespace TCore.ListenAz
             Process a record that was queued for us. Save the records to persistent
             storage, and let the sync pipe know about them.
         ----------------------------------------------------------------------------*/
-        public void ProcessQueuedRecord(IEnumerable<ListenRecord> pllr)
+        public void ProcessQueuedRecord(IEnumerable<ListenRecord> pllr, Consumer<ListenRecord>.ShouldAbortDelegate shouldAbort)
         {
             IEnumerator<ListenRecord> enumerator = pllr.GetEnumerator();
 
@@ -619,6 +619,9 @@ namespace TCore.ListenAz
 
             while (lr != null)
             {
+                if (shouldAbort())
+                    return;
+
                 if (m_lrfCurrent != null && !m_lrfCurrent.FCanAppendPartitionRecord(lr.Part))
                 {
                     // SEND NOTIFICATION HERE:

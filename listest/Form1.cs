@@ -185,7 +185,7 @@ namespace listest
 
         public void WriteLine(string sMessage)
         {
-            m_sb.AddMessage(sMessage, StatusBox.MSGT.Body);
+            m_sb.AddMessage(sMessage);
         }
     }
 }

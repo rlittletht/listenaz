@@ -237,7 +237,7 @@ namespace TCore.ListenAz
             that we would have processed the record.  future, copy it to azure.
             future future, batch up the uploads
         ----------------------------------------------------------------------------*/
-        public void ProcessQueuedRecord(IEnumerable<ListenSync> pllr)
+        public void ProcessQueuedRecord(IEnumerable<ListenSync> pllr, Consumer<ListenSync>.ShouldAbortDelegate shouldAbort)
         {
             IEnumerator<ListenSync> enumerator = pllr.GetEnumerator();
 
@@ -250,6 +250,9 @@ namespace TCore.ListenAz
 
             while (lr != null)
             {
+                if (shouldAbort())
+                    return;
+
                 // figure out what records we want to push to the server
                 // to determine where to start, look for file lr.sFileName&".Processed"
                 //   if not found, then start from beginning
